@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Heart, Star, ShoppingBag, CheckCircle } from "lucide-react";
-import { PRODUCTS } from "../data/products";
 
 interface StoreProps {
+  products: any[]; // استقبال المنتجات ديناميكياً
   onAddToCart: (product: any) => void;
 }
 
-export default function StoreSection({ onAddToCart }: StoreProps) {
+export default function StoreSection({ products, onAddToCart }: StoreProps) {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("الكل");
@@ -25,8 +25,8 @@ export default function StoreSection({ onAddToCart }: StoreProps) {
 
   const filteredProducts =
     activeCategory === "الكل"
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === activeCategory);
+      ? products
+      : products.filter((p) => p.category === activeCategory);
   const categories = ["الكل", "حديثي ولادة", "أولاد", "بنات"];
 
   return (

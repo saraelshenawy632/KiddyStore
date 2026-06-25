@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { useState, Dispatch, SetStateAction } from "react";
+import { ArrowRight, CheckCircle } from "lucide-react"; 
 import HeroSection from "../components/HeroSection";
 import StoreSection from "../components/StoreSection";
 import FooterSection from "../components/FooterSection";
@@ -9,9 +9,24 @@ import WhyUsSection from "../components/WhyUsSection";
 
 type ActiveView = "hero" | "store" | "why-us";
 
-export default function Home() {
+interface HomeProps {
+  products: any[];
+  cartItems: CartItem[];
+  setCartItems: Dispatch<SetStateAction<CartItem[]>>;
+  addToCart: (product: { id: number; name: string; price: string; src: string }) => void;
+  totalItems: number;
+  totalPrice: string;
+}
+
+export default function Home({
+  products,
+  cartItems,
+  setCartItems,
+  addToCart,
+  totalItems,
+  totalPrice,
+}: HomeProps) {
   const [view, setView] = useState<ActiveView>("hero");
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -24,35 +39,6 @@ export default function Home() {
   const handleBackToHero = () => {
     setView("hero");
     window.scrollTo({ top: 0, behavior: "instant" });
-  };
-
-  const addToCart = (product: {
-    id: number;
-    name: string;
-    price: string;
-    src: string;
-  }) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  const calculateTotalPrice = () => {
-    const total = cartItems.reduce((acc, item) => {
-      const numericPrice = parseInt(item.price.replace(/[^0-9]/g, "")) || 0;
-      return acc + numericPrice * item.quantity;
-    }, 0);
-    return `${total} ج.م`;
   };
 
   const handleOrderSuccess = () => {
@@ -139,7 +125,7 @@ export default function Home() {
                 </div>
               </header>
 
-              <StoreSection onAddToCart={addToCart} />
+              <StoreSection products={products} onAddToCart={addToCart} />
               <FooterSection />
             </div>
           )}
@@ -168,7 +154,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* المكونات العائمة (السلة والدفع) */}
           <Cart
             isOpen={isCartOpen}
             onClose={() => setIsCartOpen(false)}
@@ -183,7 +168,7 @@ export default function Home() {
             isOpen={isCheckoutOpen}
             onClose={() => setIsCheckoutOpen(false)}
             cartItems={cartItems}
-            totalPrice={calculateTotalPrice()}
+            totalPrice={totalPrice}
             onOrderSuccess={handleOrderSuccess}
           />
         </>

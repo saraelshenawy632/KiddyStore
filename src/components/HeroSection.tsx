@@ -108,7 +108,7 @@ export default function HeroSection({
   useEffect(() => {
     timer.current = setInterval(() => {
       navigate("next");
-    }, 3000);
+    }, 2500);
     return () => clearInterval(timer.current);
   }, [navigate]);
 

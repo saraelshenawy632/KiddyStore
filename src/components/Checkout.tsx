@@ -25,16 +25,61 @@ export default function Checkout({
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.name || !formData.phone || !formData.address) {
       alert("الرجاء ملء الحقول الأساسية (الاسم، الهاتف، العنوان)");
       return;
     }
-    onOrderSuccess();
+
+    if (cartItems.length === 0) {
+      alert("سلة التسوق فارغة!");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("https://kiddyvibe-backend.vercel.app/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          formData: {
+            name: formData.name,
+            phone: formData.phone,
+            city: formData.city,
+            address: formData.address,
+            notes: formData.notes,
+          },
+          cartItems: cartItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          totalPrice: totalPrice,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        onOrderSuccess();
+      } else {
+        alert(data.message || "حدث خطأ أثناء حفظ الطلب في السيرفر");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("خطأ في الاتصال بالسيرفر الأونلاين، يرجى المحاولة لاحقاً");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -46,6 +91,7 @@ export default function Checkout({
         <button
           onClick={onClose}
           className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 px-4 py-2 rounded-xl font-bold text-sm transition"
+          disabled={isSubmitting}
         >
           <ArrowRight className="w-4 h-4" />
           <span>العودة للسلة</span>
@@ -58,6 +104,7 @@ export default function Checkout({
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         <form
+          id="checkout-form"
           onSubmit={handleSubmit}
           className="lg:col-span-7 space-y-6 bg-neutral-900/40 p-6 md:p-8 rounded-3xl border border-neutral-900"
         >
@@ -232,10 +279,11 @@ export default function Checkout({
             </div>
             <button
               type="submit"
-              onClick={handleSubmit}
-              className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-neutral-200 transition text-center text-base mt-4 shadow-xl"
+              form="checkout-form"
+              disabled={isSubmitting}
+              className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-neutral-200 transition text-center text-base mt-4 shadow-xl disabled:bg-neutral-700 disabled:text-neutral-400"
             >
-              تأكيد وإرسال الطلب مجاناً
+              {isSubmitting ? "جاري إرسال طلبك... " : "تأكيد وإرسال الطلب مجاناً"}
             </button>
           </div>
           <div className="flex items-center gap-3 justify-center text-neutral-500 text-xs font-bold">

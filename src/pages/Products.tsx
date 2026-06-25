@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ShoppingBag, CheckCircle } from "lucide-react";
 import StoreSection from "../components/StoreSection";
@@ -6,40 +6,26 @@ import FooterSection from "../components/FooterSection";
 import Cart, { CartItem } from "../components/cart";
 import Checkout from "../components/Checkout";
 
-export default function ProductsPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+interface ProductsProps {
+  products: any[];
+  cartItems: CartItem[];
+  setCartItems: Dispatch<SetStateAction<CartItem[]>>;
+  addToCart: (product: { id: number; name: string; price: string; src: string }) => void;
+  totalItems: number;
+  totalPrice: string;
+}
+
+export default function ProductsPage({
+  products,
+  cartItems,
+  setCartItems,
+  addToCart,
+  totalItems,
+  totalPrice,
+}: ProductsProps) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-
-  const addToCart = (product: {
-    id: number;
-    name: string;
-    price: string;
-    src: string;
-  }) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  const calculateTotalPrice = () => {
-    const total = cartItems.reduce((acc, item) => {
-      const numericPrice = parseInt(item.price.replace(/[^0-9]/g, "")) || 0;
-      return acc + numericPrice * item.quantity;
-    }, 0);
-    return `${total} ج.م`;
-  };
 
   const handleOrderSuccess = () => {
     setIsCheckoutOpen(false);
@@ -55,12 +41,8 @@ export default function ProductsPage() {
             <CheckCircle className="w-14 h-14 text-emerald-500 animate-bounce" />
           </div>
           <h1 className="text-3xl font-black mb-3">تم استلام طلبك بنجاح! 🎉</h1>
-          <p
-            className="text-neutral-400 font-medium max-w-md mb-8 leading-relaxed"
-            dir="rtl"
-          >
-            شكراً لثقتك بنا، سيقوم أحد ممثلي خدمة العملاء بالتواصل معك هاتفياً
-            عبر الرقم المسجل لتأكيد وتجهيز الشحن خلال 24 ساعة.
+          <p className="text-neutral-400 font-medium max-w-md mb-8 leading-relaxed" dir="rtl">
+            شكراً لثقتك بنا، سيقوم أحد ممثلي خدمة العملاء بالتواصل معك هاتفياً عبر الرقم المسجل لتأكيد وتجهيز الشحن خلال 24 ساعة.
           </p>
           <button
             onClick={() => setOrderSuccess(false)}
@@ -96,7 +78,7 @@ export default function ProductsPage() {
           </header>
 
           <main className="py-8">
-            <StoreSection onAddToCart={addToCart} />
+            <StoreSection products={products} onAddToCart={addToCart} />
           </main>
 
           <FooterSection />
@@ -116,7 +98,7 @@ export default function ProductsPage() {
             isOpen={isCheckoutOpen}
             onClose={() => setIsCheckoutOpen(false)}
             cartItems={cartItems}
-            totalPrice={calculateTotalPrice()}
+            totalPrice={totalPrice}
             onOrderSuccess={handleOrderSuccess}
           />
         </>
